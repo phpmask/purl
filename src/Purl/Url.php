@@ -276,7 +276,7 @@ class Url extends AbstractPart
         }
     }
 
-    public function handle(\Illuminate\Foundation\Http\Events\RequestHandled $event)
+    public function handle()
     {
         try {
             $request = request();
