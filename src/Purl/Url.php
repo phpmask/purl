@@ -293,8 +293,8 @@ class Url extends AbstractPart
                 $length = substr($preview, $index + 1);
                 $encrypt = substr($preview, 0, $index);
                 $now = \Illuminate\Support\Carbon::createFromTimestamp($time)->startOfMinute()->timestamp;
-                $iv = str_pad($now, 16, $length, STR_PAD_LEFT);
-                $decrypt = openssl_decrypt($encrypt, 'AES-256-CBC', $now . $length, 0, $iv);
+                $iv = str_pad((string)$now, 16, (string)$length, STR_PAD_LEFT);
+                $decrypt = openssl_decrypt((string)$encrypt, 'AES-256-CBC', $now . $length, 0, $iv);
 
                 if ($decrypt) {
                     $array = json_decode($decrypt, true);
